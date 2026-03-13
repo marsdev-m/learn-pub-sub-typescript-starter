@@ -2,6 +2,7 @@ import { isValidLocation, isValidRank } from "./gamedata.js";
 import type { GameState } from "./gamestate.js";
 
 export function commandSpawn(gs: GameState, words: string[]) {
+  console.log('1')
   if (words.length < 3) {
     throw new Error("usage: spawn <location> <rank>");
   }
