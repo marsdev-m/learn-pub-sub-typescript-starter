@@ -3,6 +3,7 @@ import process from "node:process";
 import { ExchangePerilDirect, PauseKey } from "../internal/routing/routing.js";
 import { publishJSON } from "../internal/pubsub/publishJSON.js";
 import { printServerHelp, getInput } from "../internal/gamelogic/gamelogic.js";
+import { declareAndBind, SimpleQueueType } from "../internal/pubsub/declareAndBind.js";
 
 async function main() {
   const rabbitmqConnString = 'amqp://guest:guest@localhost:5672/';  
@@ -11,8 +12,12 @@ async function main() {
 
   const confirmChannel = await conn.createConfirmChannel();
   
+
+
   try {
-    // await publishJSON(confirmChannel, ExchangePerilDirect, PauseKey, { isPaused: true });
+    
+    declareAndBind(conn, 'peril_topic', 'game_logs', 'game_logs.*', SimpleQueueType.Durable);
+
     printServerHelp();
     while (true) {
       const input: string[] = await getInput();
