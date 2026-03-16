@@ -24,12 +24,12 @@ export async function subscribeJSON<T>(
     const [channel, queue] = await declareAndBind(conn, exchange, queueName, key, queueType);
     channel.consume(queueName, (msg: amqp.ConsumeMessage | null) => {
         if (msg === null) {
-            console.log('subscribeJSON(): no msg')
+            // console.log('subscribeJSON(): no msg')
             return;
         }
         try {
             const parsedMessage = JSON.parse(msg.content.toString());
-            console.log('parsedMessage: ', parsedMessage);
+            // console.log('parsedMessage: ', parsedMessage);
             Promise.resolve(handler(parsedMessage)).then((result) => {
                 if (result === AckType.Ack) {
                     channel.ack(msg);
@@ -39,10 +39,10 @@ export async function subscribeJSON<T>(
                     channel.nack(msg, false, true);
                 }
             }).catch((err) => {
-                console.log('handler error: ', err);
+                return;
             });
         } catch (err) {
-            console.log('subscribeJSON error: ', err);
+            return;
         }
     });
     
