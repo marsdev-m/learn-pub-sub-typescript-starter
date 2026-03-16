@@ -30,9 +30,12 @@ export function handlerMove(gs: GameState, ch: ConfirmChannel): (move: ArmyMove)
                     attacker: move.player,
                     defender: gs.getPlayerSnap(),
                 };
-            
-                await publishJSON(ch, ExchangePerilTopic, `${WarRecognitionsPrefix}.${gs.getUsername()}`, rw);
-                return AckType.NackRequeue;
+                try {
+                    await publishJSON(ch, ExchangePerilTopic, `${WarRecognitionsPrefix}.${gs.getUsername()}`, rw);
+                    return AckType.Ack;
+                } catch (e) {
+                    return AckType.NackRequeue;
+                }
             } else if (moveResult === MoveOutcome.SamePlayer) {
                 return AckType.NackDiscard;
             } else {
