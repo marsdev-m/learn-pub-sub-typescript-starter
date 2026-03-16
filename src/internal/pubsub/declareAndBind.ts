@@ -16,7 +16,10 @@ export async function declareAndBind(
         const queue = await channel.assertQueue(queueName, {
             durable: queueType === SimpleQueueType.Durable ? true : false,
             autoDelete: queueType === SimpleQueueType.Transient ? true : false,
-            exclusive: queueType === SimpleQueueType.Transient ? true : false
+            exclusive: queueType === SimpleQueueType.Transient ? true : false,
+            arguments: {
+                'x-dead-letter-exchange': 'peril_dlx'
+            }
         });
         await channel.bindQueue(queueName, exchange, key);
 

@@ -6,6 +6,8 @@ export enum SimpleQueueType {
   Transient,
 }
 
+export type Acktype = 'Ack' | 'NackRequeue' | 'NackDiscard';
+
 export async function subscribeJSON<T>(
     
   conn: amqp.ChannelModel,
@@ -13,7 +15,7 @@ export async function subscribeJSON<T>(
   queueName: string,
   key: string,
   queueType: SimpleQueueType,
-  handler: (data: T) => void,
+  handler: (data: T) => Acktype,
 ): Promise<void> {
     const [channel, queue] = await declareAndBind(conn, exchange, queueName, key, queueType);
     channel.consume(queueName, (msg: amqp.ConsumeMessage | null) => {
@@ -24,8 +26,14 @@ export async function subscribeJSON<T>(
         try {
             const parsedMessage = JSON.parse(msg.content.toString());
             console.log('parsedMessage: ', parsedMessage);
-            handler(parsedMessage);
-            channel.ack(msg);        
+            const result = handler(parsedMessage);
+            if (result === 'Ack') {
+                channel.ack(msg);
+            } else if (result === 'NackDiscard') {
+                channel.nack(msg, false, false);
+            } else if (result === 'NackRequeue') {
+                channel.nack(msg, false, true);
+            }
         } catch (err) {
             console.log('subscribeJSON error: ', err);
         }
