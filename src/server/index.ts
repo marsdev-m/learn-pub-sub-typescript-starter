@@ -1,9 +1,11 @@
 import amqp from "amqplib";
 import process from "node:process";
-import { ExchangePerilDirect, PauseKey } from "../internal/routing/routing.js";
+import { ExchangePerilDirect, ExchangePerilTopic, PauseKey } from "../internal/routing/routing.js";
 import { publishJSON } from "../internal/pubsub/publishJSON.js";
 import { printServerHelp, getInput } from "../internal/gamelogic/gamelogic.js";
 import { declareAndBind, SimpleQueueType } from "../internal/pubsub/declareAndBind.js";
+import { AckType, subscribeMsgPack } from "../internal/pubsub/subscribeJSON.js";
+import { writeLog, type GameLog } from "../internal/gamelogic/logs.js";
 
 async function main() {
   const rabbitmqConnString = 'amqp://guest:guest@localhost:5672/';  
@@ -15,7 +17,18 @@ async function main() {
 
   try {
     
-    declareAndBind(conn, 'peril_topic', 'game_logs', 'game_logs.*', SimpleQueueType.Durable);
+    await subscribeMsgPack(
+      conn,
+      'peril_topic',
+      'game_logs',
+      'game_logs.*',
+      SimpleQueueType.Durable,
+      async (data: GameLog) => {
+        await writeLog(data);
+        process.stdout.write('> ');
+        return AckType.Ack;
+      }
+    );
 
     printServerHelp();
     while (true) {
