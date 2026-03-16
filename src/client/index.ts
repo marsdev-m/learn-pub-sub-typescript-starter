@@ -6,8 +6,10 @@ import { GameState } from "../internal/gamelogic/gamestate.js";
 import { commandSpawn } from "../internal/gamelogic/spawn.js";
 import { commandMove, handleMove } from "../internal/gamelogic/move.js";
 import { subscribeJSON } from "../internal/pubsub/subscribeJSON.js";
-import { handlerPause, handlerMove } from "./handlers.js";
+import { handlerPause, handlerMove, handlerWar } from "./handlers.js";
 import { publishJSON } from "../internal/pubsub/publishJSON.js";
+import { WarRecognitionsPrefix } from "../internal/routing/routing.js";
+
 async function main() {
   console.log("Starting Peril client...");
 
@@ -24,8 +26,8 @@ async function main() {
     const publishCh = await conn.createConfirmChannel();
 
     await subscribeJSON(conn, ExchangePerilDirect, `${PauseKey}.${userName}`, PauseKey, SimpleQueueType.Transient, handlerPause(gameState));
-    await subscribeJSON(conn, ExchangePerilTopic, `${ArmyMovesPrefix}.${userName}`, `${ArmyMovesPrefix}.*`, SimpleQueueType.Transient, handlerMove(gameState));
-
+    await subscribeJSON(conn, ExchangePerilTopic, `${ArmyMovesPrefix}.${userName}`, `${ArmyMovesPrefix}.*`, SimpleQueueType.Transient, handlerMove(gameState, publishCh));
+    await subscribeJSON(conn, ExchangePerilTopic, `${WarRecognitionsPrefix}`, `${WarRecognitionsPrefix}.*`, SimpleQueueType.Durable, handlerWar(gameState));
 
     while (true) {
       const input: string[] = await getInput();
