@@ -13,7 +13,6 @@ async function main() {
   const confirmChannel = await conn.createConfirmChannel();
   
 
-
   try {
     
     declareAndBind(conn, 'peril_topic', 'game_logs', 'game_logs.*', SimpleQueueType.Durable);
@@ -24,7 +23,6 @@ async function main() {
       if (input.length < 1) {
         continue;
       }
-
 
       if (input[0] === 'pause') {
         console.log('sending pause message');
