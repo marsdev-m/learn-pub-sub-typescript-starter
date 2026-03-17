@@ -23,6 +23,7 @@ export async function subscribeJSON<T>(
   handler: (data: T) => AckType | Promise<AckType>,
 ): Promise<void> {
     const [channel, queue] = await declareAndBind(conn, exchange, queueName, key, queueType);
+    await channel.prefetch(1);
     channel.consume(queueName, (msg: amqp.ConsumeMessage | null) => {
         if (msg === null) {
             // console.log('subscribeJSON(): no msg')
@@ -63,6 +64,7 @@ export async function subscribeMsgPack<T>(
   handler: (data: T) => Promise<AckType> | AckType,
 ): Promise<void> {
     const [channel, queue] = await declareAndBind(conn, exchange, queueName, key, queueType);
+    await channel.prefetch(1);
     channel.consume(queueName, (msg: amqp.ConsumeMessage | null) => {
         if (msg === null) {
             return;

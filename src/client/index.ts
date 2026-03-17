@@ -1,5 +1,5 @@
 import amqp, { type ConfirmChannel } from "amqplib";
-import { clientWelcome,commandStatus,getInput, printClientHelp, printQuit } from "../internal/gamelogic/gamelogic.js";
+import { clientWelcome,commandStatus,getInput, getMaliciousLog, printClientHelp, printQuit } from "../internal/gamelogic/gamelogic.js";
 import { declareAndBind, SimpleQueueType } from "../internal/pubsub/declareAndBind.js";
 import { ArmyMovesPrefix, ExchangePerilDirect, ExchangePerilTopic, GameLogSlug, PauseKey } from "../internal/routing/routing.js";
 import { GameState } from "../internal/gamelogic/gamestate.js";
@@ -46,7 +46,29 @@ async function main() {
         } else if (input[0] === 'help') {
           printClientHelp();
         } else if (input[0] === 'spam') {
-          console.log('Spamming not allowed yet');
+          if (input.length < 2 || !input[1]) {
+            console.log('n missing');
+            continue;
+          }
+
+          const amountStr = input[1];
+          const parsed = parseInt(amountStr, 10);
+          if (Number.isNaN(parsed) || parsed <= 0) {
+            console.log('invalid amount; please provide a positive integer');
+            continue;
+          }
+
+          const MAX_SPAM = 10000;
+          const count = Math.min(parsed, MAX_SPAM);
+          if (parsed > MAX_SPAM) {
+            console.log(`amount too large, clamped to ${MAX_SPAM}`);
+          }
+
+          for (let i = 0; i < count; i++) {
+            const maliciousMsg = getMaliciousLog();
+            publishJSON(publishCh, ExchangePerilTopic, `${GameLogSlug}.${userName}`, maliciousMsg);
+          }
+
         } else if (input[0] === 'quit') {
           printQuit();
           break;
